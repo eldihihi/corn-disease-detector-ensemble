@@ -71,6 +71,6 @@ if __name__ == '__main__':
     if models:
         print("\nSemua model berhasil dimuat:")
         for name, model in models.items():
-            print(f"- {name}: Model dimuat.") # Jangan cetak summary, karena outputnya panjang
+            print(f"- {name}: Model dimuat.")
     else:
         print("Ada masalah dalam memuat model.")
