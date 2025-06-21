@@ -14,10 +14,16 @@ MODEL_FILENAMES = {
     "inception": "inception_best_model.h5"
 }
 
+# Variabel global didefinisikan di sini
+ENSEMBLE_MODELS = {}
+MODELS_LOADED = False
+MODEL_LOAD_ERROR = False
+
+
 def download_model(model_name):
     """Mengunduh model dari URL yang diberikan."""
     os.makedirs(MODEL_DIR, exist_ok=True)
-    print(f"DEBUG: Memastikan direktori '{MODEL_DIR}' ada. Path: {os.path.abspath(MODEL_DIR)}") # Tambah debug ini
+    print(f"DEBUG: Memastikan direktori '{MODEL_DIR}' ada. Path: {os.path.abspath(MODEL_DIR)}")
 
     model_filename = MODEL_FILENAMES[model_name]
     model_filepath = os.path.join(MODEL_DIR, model_filename)
@@ -25,31 +31,24 @@ def download_model(model_name):
 
     if os.path.exists(model_filepath):
         print(f"DEBUG: Model {model_name} sudah ada di {model_filepath}. Melewatkan unduhan.")
-        # Verifikasi ukuran file jika sudah ada
         file_size = os.path.getsize(model_filepath)
         print(f"DEBUG: Ukuran file {model_filename}: {file_size} bytes.")
         return model_filepath
 
     print(f"DEBUG: Mulai mengunduh model {model_name} dari: {model_url}")
     try:
-        # Tambahkan parameter allow_redirects=True secara eksplisit (defaultnya True, tapi untuk kejelasan)
         response = requests.get(model_url, stream=True, allow_redirects=True)
-        response.raise_for_status() # Akan memunculkan HTTPError untuk status kode 4xx/5xx
+        response.raise_for_status()
 
         total_size = int(response.headers.get('content-length', 0))
         downloaded_size = 0
 
         with open(model_filepath, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):
-                if chunk: # filter out keep-alive new chunks
+                if chunk:
                     f.write(chunk)
                     downloaded_size += len(chunk)
-                    # Opsi: tambahkan progres bar di log (opsional, bisa sangat verbose)
-                    # progress = (downloaded_size / total_size) * 100 if total_size > 0 else 0
-                    # print(f"DEBUG: Mengunduh {model_name}: {progress:.2f}% ({downloaded_size}/{total_size} bytes)")
-
         print(f"DEBUG: Model {model_name} berhasil diunduh ke: {model_filepath}")
-        # Verifikasi file setelah diunduh
         if os.path.exists(model_filepath):
             final_size = os.path.getsize(model_filepath)
             print(f"DEBUG: Verifikasi: File {model_filename} ada dan ukurannya {final_size} bytes.")
@@ -69,6 +68,10 @@ def download_model(model_name):
 
 def load_all_models():
     """Mengunduh dan memuat ketiga model."""
+    # HAPUS BARIS 'global' UNTUK VARIABEL MODEL_LOAD_ERROR DI SINI
+    # global MODEL_LOAD_ERROR # HAPUS BARIS INI
+    # global MODELS_LOADED # HAPUS BARIS INI (jika ada)
+
     loaded_models = {}
     model_names = ["resnet", "vgg", "inception"]
 
@@ -82,11 +85,9 @@ def load_all_models():
                 print(f"DEBUG: Model {name} berhasil dimuat.")
             except Exception as e:
                 print(f"ERROR: Gagal memuat model {name} dari {filepath}: {e}")
-                # Beri tahu Flask bahwa ada error saat startup model
-                global MODEL_LOAD_ERROR
+                # Ini akan memodifikasi variabel global yang sudah didefinisikan di atas
                 MODEL_LOAD_ERROR = True
         else:
             print(f"ERROR: Tidak dapat menemukan file untuk memuat model {name}.")
-            global MODEL_LOAD_ERROR
             MODEL_LOAD_ERROR = True
     return loaded_models
