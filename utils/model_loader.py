@@ -4,19 +4,17 @@ from tensorflow.keras.models import load_model
 
 MODEL_DIR = "models"
 MODEL_URLS = {
-    "vgg": "https://drive.google.com/uc?id=1kKUN75slUQtEsqv8tULqAC-HIVy_OBU8",
-    "resnet": "https://drive.google.com/uc?id=1jVmr1kHY8cDSYgJEnIQ-OhqcUV8cj-qM",
-    "inception": "https://drive.google.com/uc?id=12YT-eiq09i3B8gY60KBjkOnJFHEKBIob"
+    "resnet": "https://drive.google.com/uc?export=download&id=1Jvmr1KHY8cDSYgJEnIQ-OhqcUV8cj-qM",
+    "vgg": "https://drive.google.com/uc?export=download&id=1KKUN75s1UQTESqv8tULqAC-HlVy_OBU8",
+    "inception": "https://drive.google.com/uc?export=download&id=12YT--eiq09i3I8BgY60KBJkOnJFHEKBiob"
 }
 MODEL_FILENAMES = {
-    "vgg": "models/vgg_best_model.h5",
-    "resnet": "models/resnet_best_model.h5",
-    "inception": "models/inception_best_model.h5"
+    "resnet": "resnet_best_model.h5",
+    "vgg": "vgg_best_model.h5",
+    "inception": "inception_best_model.h5"
 }
 
-# Variabel global didefinisikan di sini.
-# Mereka bisa diakses dan dimodifikasi langsung dari fungsi tanpa kata kunci 'global'
-# karena mereka sudah ada di namespace modul (global).
+# Variabel global didefinisikan di sini
 ENSEMBLE_MODELS = {}
 MODELS_LOADED = False
 MODEL_LOAD_ERROR = False
@@ -70,9 +68,9 @@ def download_model(model_name):
 
 def load_all_models():
     """Mengunduh dan memuat ketiga model."""
-    # HAPUS BARIS 'global' untuk MODEL_LOAD_ERROR dan MODELS_LOADED
-    # Karena variabel ini sudah didefinisikan di tingkat modul (global scope),
-    # kita bisa langsung memodifikasinya tanpa perlu mendeklarasikannya lagi dengan 'global'.
+    # HAPUS BARIS 'global' UNTUK VARIABEL MODEL_LOAD_ERROR DI SINI
+    # global MODEL_LOAD_ERROR # HAPUS BARIS INI
+    # global MODELS_LOADED # HAPUS BARIS INI (jika ada)
 
     loaded_models = {}
     model_names = ["resnet", "vgg", "inception"]
@@ -87,29 +85,9 @@ def load_all_models():
                 print(f"DEBUG: Model {name} berhasil dimuat.")
             except Exception as e:
                 print(f"ERROR: Gagal memuat model {name} dari {filepath}: {e}")
-                # Memodifikasi variabel global tanpa 'global' karena sudah ada
+                # Ini akan memodifikasi variabel global yang sudah didefinisikan di atas
                 MODEL_LOAD_ERROR = True
         else:
             print(f"ERROR: Tidak dapat menemukan file untuk memuat model {name}.")
             MODEL_LOAD_ERROR = True
-
-    # Setelah semua model selesai diproses (berhasil atau gagal),
-    # atur MODELS_LOADED berdasarkan apakah ada error.
-    # ENSEMBLE_MODELS harus diperbarui di sini setelah semua model dimuat
-    global ENSEMBLE_MODELS # ENSEMBLE_MODELS perlu 'global' karena diinisialisasi ulang
-    ENSEMBLE_MODELS = loaded_models
-
-    global MODELS_LOADED # MODELS_LOADED perlu 'global' karena diinisialisasi ulang
-    MODELS_LOADED = not MODEL_LOAD_ERROR # Jika tidak ada error, maka model berhasil dimuat
-
     return loaded_models
-
-if __name__ == '__main__':
-    # Contoh penggunaan:
-    models = load_all_models()
-    if models:
-        print("\nSemua model berhasil dimuat:")
-        for name, model in models.items():
-            print(f"- {name}: Model dimuat.")
-    else:
-        print("Ada masalah dalam memuat model.")
