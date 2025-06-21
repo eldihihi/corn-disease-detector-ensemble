@@ -1,140 +1,154 @@
 # app.py
+
 import os
-from flask import Flask, render_template, request, redirect, url_for, flash
-from werkzeug.utils import secure_filename
 import numpy as np
-import threading
-import time
+from flask import Flask, render_template, request, redirect, url_for, flash
 
-# Impor fungsi dari file utilitas
-from utils.model_loader import load_all_models, MODEL_DIR, MODEL_FILENAMES
-from utils.image_processor import preprocess_image
+# Impor fungsi dan variabel global dari modul utilitas
+from utils.model_loader import load_models_in_background, ENSEMBLE_MODELS, MODELS_LOADED, MODEL_LOAD_ERROR
+from utils.image_processor import preprocess_image # Memastikan ini diimpor untuk preprocessing
 
+# Menginisialisasi aplikasi Flask
 app = Flask(__name__)
-# --- TAMBAHKAN BARIS INI ---
-app.secret_key = os.urandom(24) # Gunakan nilai acak yang kuat
-# --- AKHIR TAMBAH BARIS ---
+
+# Mengatur secret key untuk sesi dan flash messages (SANGAT PENTING!)
+app.secret_key = os.urandom(24)
 
 # Konfigurasi Upload Folder
-UPLOAD_FOLDER = 'static/uploads' # Simpan di static agar bisa diakses browser
+# Menyimpan gambar yang diunggah di dalam direktori 'static/uploads'
+# agar bisa diakses oleh browser melalui URL
+UPLOAD_FOLDER = 'static/uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 # Batas ukuran file 16MB
 
-# Tipe file yang diizinkan
+# Tipe file yang diizinkan untuk diunggah
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
-# Kelas-kelas penyakit Anda (GANTI INI SESUAI DENGAN MODEL ANDA)
+# Kelas-kelas penyakit (GANTI INI SESUAI DENGAN MODEL ANDA)
+# Pastikan urutan ini sesuai dengan output prediksi model Anda
 CLASS_NAMES = [
-    'Corn_Common_Rust',
-    'Corn_Gray_Leaf_Spot',
-    'Corn_Healthy',
-    'Corn_Northern_Leaf_Blight'
+    'Blight',
+    'Common_Rust',
+    'Gray_Leaf_Spot',
+    'Healthy'
     # Tambahkan semua kelas penyakit yang model Anda prediksi
 ]
 
-# Variabel global untuk menyimpan model yang dimuat
-LOADED_MODELS = {}
-MODEL_LOAD_ERROR = None # Untuk menyimpan pesan error jika gagal memuat model
-
+# Fungsi untuk memeriksa apakah ekstensi file diizinkan
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def load_models_in_background():
-    """Memuat model di latar belakang saat aplikasi startup."""
-    global LOADED_MODELS, MODEL_LOAD_ERROR
-    try:
-        print("Memulai proses memuat model di latar belakang...")
-        LOADED_MODELS = load_all_models()
-        if not LOADED_MODELS:
-            MODEL_LOAD_ERROR = "Gagal memuat semua model. Periksa log."
-            print(MODEL_LOAD_ERROR)
-        else:
-            print("Semua model berhasil dimuat dan siap digunakan.")
-    except Exception as e:
-        MODEL_LOAD_ERROR = f"Kesalahan fatal saat startup model: {e}"
-        print(MODEL_LOAD_ERROR)
+# ========== FLASK ROUTES ==========
 
-# Jalankan fungsi pemuatan model di thread terpisah saat aplikasi dimulai
-# Ini penting agar aplikasi bisa start cepat dan memuat model di latar belakang
-# tanpa membuat Railway timeout.
-with app.app_context():
-    model_thread = threading.Thread(target=load_models_in_background)
-    model_thread.start()
-
+# Route untuk halaman utama
 @app.route('/')
 def index():
+    # Menampilkan pesan berdasarkan status pemuatan model
     if MODEL_LOAD_ERROR:
-        flash(MODEL_LOAD_ERROR, 'error')
-    elif not LOADED_MODELS:
-        flash("Model sedang dimuat, mohon tunggu sebentar...", 'info')
+        flash("Kesalahan fatal saat startup model. Periksa log Railway.", 'error')
+    elif not MODELS_LOADED:
+        flash("Model sedang dimuat (di latar belakang), mohon tunggu sebentar...", 'info')
+    
+    # Render template index.html
     return render_template('index.html')
 
+# Route untuk menangani unggahan file dan prediksi
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    # Memastikan metode request adalah POST
     if request.method == 'POST':
+        # Memeriksa apakah ada file di request
         if 'file' not in request.files:
             flash('Tidak ada bagian file', 'error')
             return redirect(request.url)
+        
         file = request.files['file']
+        
+        # Memeriksa apakah nama file kosong
         if file.filename == '':
             flash('Tidak ada file terpilih', 'error')
             return redirect(request.url)
+        
+        # Memeriksa apakah file ada dan ekstensinya diizinkan
         if file and allowed_file(file.filename):
+            # Memeriksa status pemuatan model sebelum melakukan prediksi
             if MODEL_LOAD_ERROR:
-                flash(MODEL_LOAD_ERROR, 'error')
+                flash(f"Tidak dapat melakukan prediksi: {MODEL_LOAD_ERROR}", 'error')
                 return redirect(url_for('index'))
-            if not LOADED_MODELS or len(LOADED_MODELS) < 3: # Pastikan semua 3 model termuat
+            if not MODELS_LOADED or len(ENSEMBLE_MODELS) < 3:
                 flash("Model belum sepenuhnya dimuat. Mohon tunggu beberapa saat dan coba lagi.", 'info')
                 return redirect(url_for('index'))
 
+            # Menyimpan file yang diunggah dengan nama yang aman
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
 
             try:
-                # Prediksi menggunakan ensemble
+                # Inisialisasi daftar prediksi dari setiap model
                 predictions = []
-                for model_name, model in LOADED_MODELS.items():
+                
+                # Melakukan prediksi dengan setiap model dalam ensemble
+                for model_name, model in ENSEMBLE_MODELS.items():
+                    # Preprocess gambar sesuai dengan model yang sedang digunakan
+                    # PENTING: Pastikan ukuran input di image_processor.py sesuai
+                    # (224x224 untuk ResNet/VGG, 299x299 untuk Inception)
                     processed_image = preprocess_image(filepath, model_name)
+                    
+                    # Lakukan prediksi
                     pred = model.predict(processed_image)
                     predictions.append(pred)
 
-                # Ensemble Averaging
+                # Ensemble Averaging: Rata-ratakan prediksi dari semua model
                 ensemble_prediction = np.mean(predictions, axis=0)
+                
+                # Mendapatkan kelas yang diprediksi dan tingkat keyakinan
                 predicted_class_index = np.argmax(ensemble_prediction)
-                predicted_class = CLASS_NAMES[predicted_class_index]
-                confidence = np.max(ensemble_prediction) * 100 # Dalam persen
+                result = CLASS_NAMES[predicted_class_index]
+                confidence = np.max(ensemble_prediction) * 100 # Konversi ke persen
 
-                # Hapus gambar setelah prediksi (opsional, tergantung kebutuhan)
-                # os.remove(filepath)
-
-                flash(f"Deteksi: {predicted_class} (Keyakinan: {confidence:.2f}%)", 'success')
+                # Menampilkan hasil prediksi ke pengguna
+                flash(f"Deteksi: {result} (Keyakinan: {confidence:.2f}%)", 'success')
                 return render_template('index.html',
-                                       result=predicted_class,
+                                       result=result,
                                        confidence=f"{confidence:.2f}%",
                                        uploaded_image_url=url_for('static', filename='uploads/' + filename))
+            
             except Exception as e:
-                flash(f"Terjadi kesalahan saat memproses gambar: {e}", 'error')
-                # Hapus gambar yang mungkin rusak
+                # Tangani kesalahan yang terjadi selama proses prediksi
+                flash(f"Terjadi kesalahan saat memproses gambar atau melakukan prediksi: {e}", 'error')
+                print(f"ERROR: Prediksi gagal karena: {e}") # Cetak ke log Railway
+                
+                # Hapus gambar yang mungkin rusak atau menyebabkan error (opsional)
                 if os.path.exists(filepath):
                     os.remove(filepath)
                 return redirect(url_for('index'))
         else:
+            # Jika tipe file tidak diizinkan
             flash('Tipe file tidak diizinkan. Hanya gambar (png, jpg, jpeg, gif) yang diizinkan.', 'error')
             return redirect(request.url)
+    
+    # Redirect ke halaman utama jika bukan POST request
     return redirect(url_for('index'))
 
-# Jalankan aplikasi
-if __name__ == '__main__':
-    # Pastikan direktori models ada sebelum memuat model
-    if not os.path.exists(MODEL_DIR):
-        os.makedirs(MODEL_DIR)
+# ========== STARTUP APLIKASI ==========
+# Pastikan direktori 'models' ada sebelum memulai proses pemuatan model
+if not os.path.exists(MODEL_DIR):
+    os.makedirs(MODEL_DIR)
 
-    # PORT environment variable untuk deployment di Railway
-    port = int(os.environ.get('PORT', 5000))
+# Memulai proses pemuatan model di latar belakang saat aplikasi Flask startup.
+# Ini penting untuk mencegah Railway timeout karena pengunduhan model yang besar.
+load_models_in_background()
+
+# Menjalankan aplikasi Flask
+if __name__ == '__main__':
+    # Gunakan variabel lingkungan 'PORT' yang disediakan oleh Railway,
+    # atau default ke port 8080 jika tidak ada.
+    port = int(os.environ.get('PORT', 8080))
     print(f"Aplikasi Flask akan berjalan di host 0.0.0.0, port {port}")
-    # debug=True hanya untuk pengembangan lokal, ubah ke False di produksi
+    
+    # debug=False untuk lingkungan produksi (SANGAT PENTING untuk keamanan & performa)
     app.run(host='0.0.0.0', port=port, debug=False)
