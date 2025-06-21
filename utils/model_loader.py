@@ -4,14 +4,14 @@ from tensorflow.keras.models import load_model
 
 MODEL_DIR = "models"
 MODEL_URLS = {
-    "resnet": "https://drive.google.com/uc?export=download&id=1Jvmr1KHY8cDSYgJEnIQ-OhqcUV8cj-qM",
-    "vgg": "https://drive.google.com/uc?export=download&id=1KKUN75s1UQTESqv8tULqAC-HlVy_OBU8",
-    "inception": "https://drive.google.com/uc?export=download&id=12YT--eiq09i3I8BgY60KBJkOnJFHEKBiob"
+    "vgg": "https://drive.google.com/uc?id=1kKUN75slUQtEsqv8tULqAC-HIVy_OBU8",
+    "resnet": "https://drive.google.com/uc?id=1jVmr1kHY8cDSYgJEnIQ-OhqcUV8cj-qM",
+    "inception": "https://drive.google.com/uc?id=12YT-eiq09i3B8gY60KBjkOnJFHEKBIob"
 }
 MODEL_FILENAMES = {
-    "resnet": "resnet_best_model.h5",
-    "vgg": "vgg_best_model.h5",
-    "inception": "inception_best_model.h5"
+    "vgg": "models/vgg_best_model.h5",
+    "resnet": "models/resnet_best_model.h5",
+    "inception": "models/inception_best_model.h5"
 }
 
 # Variabel global didefinisikan di sini.
