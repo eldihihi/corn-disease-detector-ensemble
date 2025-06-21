@@ -1,4 +1,3 @@
-# utils/model_loader.py
 import os
 import requests
 from tensorflow.keras.models import load_model
@@ -22,8 +21,8 @@ MODEL_FILENAMES = {
 
 def download_model(model_name):
     """Mengunduh model dari URL yang diberikan."""
-    if not os.path.exists(MODEL_DIR):
-        os.makedirs(MODEL_DIR)
+    # UBAH BARIS INI
+    os.makedirs(MODEL_DIR, exist_ok=True) # Tambahkan exist_ok=True
 
     model_filename = MODEL_FILENAMES[model_name]
     model_filepath = os.path.join(MODEL_DIR, model_filename)
