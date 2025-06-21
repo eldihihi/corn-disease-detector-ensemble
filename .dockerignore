@@ -1,0 +1,10 @@
+# .dockerignore
+.git
+.gitignore
+.vscode/
+__pycache__/
+*.pyc
+*.egg-info/
+.env
+uploads/
+models/

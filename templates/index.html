@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detektor Penyakit Jagung (Ensemble CNN)</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Detektor Penyakit Jagung</h1>
+        <p>Unggah gambar daun jagung untuk mendeteksi penyakit.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="/upload" enctype="multipart/form-data">
+            <input type="file" name="file" accept="image/*" required>
+            <button type="submit">Unggah dan Deteksi</button>
+        </form>
+
+        {% if result %}
+            <div class="prediction-result">
+                <h2>Hasil Deteksi:</h2>
+                <p><strong>Penyakit/Kondisi:</strong> {{ result }}</p>
+                <p><strong>Keyakinan:</strong> {{ confidence }}</p>
+                {% if uploaded_image_url %}
+                    <h3>Gambar yang Diunggah:</h3>
+                    <img src="{{ uploaded_image_url }}" alt="Uploaded Image" class="uploaded-image">
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

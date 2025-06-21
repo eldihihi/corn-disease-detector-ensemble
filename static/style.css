@@ -1,0 +1,136 @@
+/* static/style.css */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #1a1a2e; /* Warna latar belakang gelap */
+    color: #e0e0e0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Mengatur ke atas */
+    min-height: 100vh;
+    margin: 0;
+    padding: 30px 15px; /* Padding di atas dan samping */
+    box-sizing: border-box;
+}
+
+.container {
+    background-color: #22223b; /* Warna kontainer gelap */
+    padding: 35px;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    text-align: center;
+    max-width: 600px;
+    width: 100%;
+}
+
+h1 {
+    color: #00bcd4; /* Warna biru cyan */
+    margin-bottom: 20px;
+    font-size: 2.2em;
+    font-weight: 600;
+}
+
+p {
+    margin-bottom: 25px;
+    font-size: 1.1em;
+    line-height: 1.6;
+}
+
+.flashes {
+    list-style-type: none;
+    padding: 0;
+    margin-bottom: 20px;
+}
+
+.flashes li {
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #fff;
+}
+
+.flashes .error {
+    background-color: #e74c3c; /* Merah untuk error */
+}
+
+.flashes .info {
+    background-color: #f39c12; /* Oranye untuk info/peringatan */
+}
+
+.flashes .success {
+    background-color: #2ecc71; /* Hijau untuk sukses */
+}
+
+form {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+input[type="file"] {
+    background-color: #3f3f5a;
+    color: #e0e0e0;
+    padding: 12px 15px;
+    border: 1px solid #555;
+    border-radius: 8px;
+    cursor: pointer;
+    width: calc(100% - 30px); /* Menyesuaikan padding */
+    max-width: 350px;
+}
+
+input[type="file"]::-webkit-file-upload-button {
+    background-color: #007bff; /* Warna biru untuk tombol file */
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+button {
+    background-color: #7209b7; /* Warna ungu khas Railway */
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+    width: 100%;
+    max-width: 250px;
+}
+
+button:hover {
+    background-color: #5a008c;
+}
+
+.prediction-result {
+    margin-top: 40px;
+    background-color: #2f2f4a;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.prediction-result h2 {
+    color: #00bcd4;
+    margin-bottom: 15px;
+    font-size: 1.8em;
+}
+
+.prediction-result p {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+}
+
+.uploaded-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-top: 20px;
+    border: 2px solid #555;
+}
