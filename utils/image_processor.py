@@ -9,7 +9,7 @@ from tensorflow.keras.applications.inception_v3 import preprocess_input as incep
 IMAGE_SIZE = {
     "resnet": (224, 224),
     "vgg": (224, 224),
-    "inception": (299, 299)
+    "inception": (299, 299) # PASTIKAN INI SESUAI JIKA MODEL ANDA DILATIH DENGAN UKURAN INI
 }
 
 def preprocess_image(image_path, model_name):
@@ -20,10 +20,10 @@ def preprocess_image(image_path, model_name):
     if not target_size:
         raise ValueError(f"Ukuran gambar tidak dikenal untuk model: {model_name}")
 
-    img = Image.open(image_path).convert('RGB') # Pastikan gambar dalam format RGB
+    img = Image.open(image_path).convert('RGB')
     img = img.resize(target_size)
     img_array = np.array(img)
-    img_array = np.expand_dims(img_array, axis=0) # Tambahkan dimensi batch
+    img_array = np.expand_dims(img_array, axis=0)
 
     if model_name == "resnet":
         return resnet_preprocess(img_array)
@@ -32,4 +32,4 @@ def preprocess_image(image_path, model_name):
     elif model_name == "inception":
         return inception_preprocess(img_array)
     else:
-        return img_array # Default atau jika tidak ada preprocess spesifik
+        return img_array
