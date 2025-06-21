@@ -1,5 +1,5 @@
 Flask==2.3.2
-tensorflow==2.9.0 # ATAU tensorflow==2.8.0, ATAU tensorflow==2.11.0
+tensorflow-cpu==2.9.0  # Ubah dari tensorflow menjadi tensorflow-cpu
 Pillow==9.2.0
 numpy==1.23.5
 scikit-learn==1.3.0
