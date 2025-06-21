@@ -11,6 +11,9 @@ from utils.model_loader import load_all_models, MODEL_DIR, MODEL_FILENAMES
 from utils.image_processor import preprocess_image
 
 app = Flask(__name__)
+# --- TAMBAHKAN BARIS INI ---
+app.secret_key = os.urandom(24) # Gunakan nilai acak yang kuat
+# --- AKHIR TAMBAH BARIS ---
 
 # Konfigurasi Upload Folder
 UPLOAD_FOLDER = 'static/uploads' # Simpan di static agar bisa diakses browser
