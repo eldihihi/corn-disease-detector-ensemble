@@ -14,7 +14,9 @@ MODEL_FILENAMES = {
     "inception": "inception_best_model.h5"
 }
 
-# Variabel global didefinisikan di sini
+# Variabel global didefinisikan di sini.
+# Mereka bisa diakses dan dimodifikasi langsung dari fungsi tanpa kata kunci 'global'
+# karena mereka sudah ada di namespace modul (global).
 ENSEMBLE_MODELS = {}
 MODELS_LOADED = False
 MODEL_LOAD_ERROR = False
@@ -68,9 +70,9 @@ def download_model(model_name):
 
 def load_all_models():
     """Mengunduh dan memuat ketiga model."""
-    # HAPUS BARIS 'global' UNTUK VARIABEL MODEL_LOAD_ERROR DI SINI
-    # global MODEL_LOAD_ERROR # HAPUS BARIS INI
-    # global MODELS_LOADED # HAPUS BARIS INI (jika ada)
+    # HAPUS BARIS 'global' untuk MODEL_LOAD_ERROR dan MODELS_LOADED
+    # Karena variabel ini sudah didefinisikan di tingkat modul (global scope),
+    # kita bisa langsung memodifikasinya tanpa perlu mendeklarasikannya lagi dengan 'global'.
 
     loaded_models = {}
     model_names = ["resnet", "vgg", "inception"]
@@ -85,9 +87,29 @@ def load_all_models():
                 print(f"DEBUG: Model {name} berhasil dimuat.")
             except Exception as e:
                 print(f"ERROR: Gagal memuat model {name} dari {filepath}: {e}")
-                # Ini akan memodifikasi variabel global yang sudah didefinisikan di atas
+                # Memodifikasi variabel global tanpa 'global' karena sudah ada
                 MODEL_LOAD_ERROR = True
         else:
             print(f"ERROR: Tidak dapat menemukan file untuk memuat model {name}.")
             MODEL_LOAD_ERROR = True
+
+    # Setelah semua model selesai diproses (berhasil atau gagal),
+    # atur MODELS_LOADED berdasarkan apakah ada error.
+    # ENSEMBLE_MODELS harus diperbarui di sini setelah semua model dimuat
+    global ENSEMBLE_MODELS # ENSEMBLE_MODELS perlu 'global' karena diinisialisasi ulang
+    ENSEMBLE_MODELS = loaded_models
+
+    global MODELS_LOADED # MODELS_LOADED perlu 'global' karena diinisialisasi ulang
+    MODELS_LOADED = not MODEL_LOAD_ERROR # Jika tidak ada error, maka model berhasil dimuat
+
     return loaded_models
+
+if __name__ == '__main__':
+    # Contoh penggunaan:
+    models = load_all_models()
+    if models:
+        print("\nSemua model berhasil dimuat:")
+        for name, model in models.items():
+            print(f"- {name}: Model dimuat.")
+    else:
+        print("Ada masalah dalam memuat model.")
